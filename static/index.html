@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Obrolin — Conversation Cards</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        /* ─── Reset & Base ─── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f0f14;
+            --bg-card: #1a1a24;
+            --bg-card-hover: #22222f;
+            --text: #f0f0f5;
+            --text-dim: #8888a0;
+            --accent: #f472b6;
+            --accent-glow: rgba(244, 114, 182, 0.3);
+            --accent2: #818cf8;
+            --border: #2a2a3a;
+            --radius: 20px;
+            --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        html, body {
+            height: 100%;
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(244,114,182,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(129,140,248,0.06) 0%, transparent 50%),
+                var(--bg);
+        }
+
+        /* ─── Header ─── */
+        header {
+            padding: 24px 20px 8px;
+            text-align: center;
+            position: relative;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+        .seen-count {
+            position: absolute;
+            right: 20px;
+            top: 28px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            background: var(--bg-card);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* ─── Main ─── */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 28px;
+        }
+
+        /* ─── Card ─── */
+        .card-wrapper {
+            perspective: 1200px;
+            width: 100%;
+            max-width: 440px;
+            aspect-ratio: 3/4;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+        }
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: var(--radius);
+            padding: 36px 28px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .card-face.front {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .card-face.back {
+            transform: rotateY(180deg);
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            opacity: 0.9;
+        }
+        .card-question {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.6;
+            color: var(--text);
+            max-width: 360px;
+        }
+        .card-question .quote-mark {
+            display: block;
+            font-size: 2.5rem;
+            opacity: 0.2;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        .card-hint {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.7;
+        }
+        .card-hint-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+        .tap-hint {
+            position: absolute;
+            bottom: 16px;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            opacity: 0.5;
+            letter-spacing: 0.05em;
+        }
+
+        /* ─── Shimmer Loading ─── */
+        .card-inner.loading .card-question {
+            color: transparent;
+            background: linear-gradient(90deg, var(--bg-card-hover) 25%, #2a2a3e 50%, var(--bg-card-hover) 75%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .card-inner.loading .tap-hint { display: none; }
+        .card-inner.loading .category-badge { opacity: 0.4; }
+
+        /* ─── Buttons ─── */
+        .actions {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 440px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 14px;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+        .btn-primary:hover { box-shadow: 0 6px 24px var(--accent-glow); }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--bg-card-hover); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-dim);
+            flex: 0 !important;
+            padding: 14px 16px;
+        }
+        .btn-ghost:hover { color: var(--text); }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+        .btn.loading .spinner { display: block; }
+        .btn.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── History Panel ─── */
+        .history-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .history-overlay.open { display: flex; }
+        .history-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius) var(--radius) 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            width: 100%;
+            max-width: 520px;
+            max-height: 70vh;
+            padding: 24px 20px 32px;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .history-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .history-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .history-close:hover { color: var(--text); }
+        .history-empty {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 40px 0;
+            font-size: 0.9rem;
+        }
+        .history-item {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border-left: 3px solid var(--accent);
+        }
+
+        /* ─── Notif ─── */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 200;
+            transition: transform 0.4s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 480px) {
+            header { padding: 16px 16px 4px; }
+            .logo { font-size: 1.4rem; }
+            .seen-count { position: static; display: inline-block; margin-top: 8px; }
+            .card-wrapper { max-width: 340px; }
+            .card-face { padding: 28px 20px; }
+            .card-question { font-size: 1.05rem; }
+            .actions { flex-wrap: wrap; }
+            .btn { padding: 12px 16px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">obrolin</div>
+    <div class="subtitle">percakapan untuk hati yang dekat</div>
+    <div class="seen-count" id="seenCount">0 dilihat</div>
+</header>
+
+<main>
+    <div class="card-wrapper" id="cardWrapper">
+        <div class="card-inner" id="cardInner">
+            <div class="card-face front">
+                <div class="category-badge" id="categoryBadge">—</div>
+                <div class="card-question" id="questionText">
+                    <span class="quote-mark">"</span>
+                    Tekan tombol mulai untuk pertanyaan pertama ✨
+                </div>
+                <div class="tap-hint">ketuk kartu untuk lihat petunjuk</div>
+            </div>
+            <div class="card-face back">
+                <div class="card-hint-icon">💬</div>
+                <div class="card-hint" id="hintText">
+                    Gunakan pertanyaan ini sebagai pembuka obrolan santai.
+                    Jawab dengan jujur dan tulus ya ❤️
+                </div>
+                <div class="tap-hint">ketuk untuk balik</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-primary" id="btnNext">
+            <span class="btn-text">🎲 Pertanyaan Baru</span>
+            <span class="spinner"></span>
+        </button>
+        <button class="btn btn-secondary" id="btnReset">↻ Reset</button>
+        <button class="btn btn-ghost" id="btnHistory">📋</button>
+    </div>
+</main>
+
+<!-- History Overlay -->
+<div class="history-overlay" id="historyOverlay">
+    <div class="history-panel">
+        <div class="history-header">
+            <span class="history-title">📜 Riwayat Pertanyaan</span>
+            <button class="history-close" id="historyClose">✕</button>
+        </div>
+        <div id="historyList">
+            <div class="history-empty">Belum ada pertanyaan yang dilihat</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ─── State ───
+    let isLoading = false;
+    let currentQuestion = '';
+    let currentCategory = '';
+
+    // ─── DOM ───
+    const cardInner = document.getElementById('cardInner');
+    const cardWrapper = document.getElementById('cardWrapper');
+    const questionText = document.getElementById('questionText');
+    const categoryBadge = document.getElementById('categoryBadge');
+    const hintText = document.getElementById('hintText');
+    const seenCount = document.getElementById('seenCount');
+    const btnNext = document.getElementById('btnNext');
+    const btnReset = document.getElementById('btnReset');
+    const btnHistory = document.getElementById('btnHistory');
+    const historyOverlay = document.getElementById('historyOverlay');
+    const historyClose = document.getElementById('historyClose');
+    const historyList = document.getElementById('historyList');
+    const toast = document.getElementById('toast');
+
+    // ─── Card Flip ───
+    cardWrapper.addEventListener('click', () => {
+        cardInner.classList.toggle('flipped');
+    });
+
+    // ─── Fetch Question ───
+    async function fetchQuestion() {
+        if (isLoading) return;
+        isLoading = true;
+        btnNext.classList.add('loading');
+        btnNext.disabled = true;
+        cardInner.classList.add('loading');
+        // Unflip card
+        cardInner.classList.remove('flipped');
+
+        try {
+            const resp = await fetch('/api/question');
+            if (!resp.ok) throw new Error('Network error');
+            const data = await resp.json();
+
+            currentQuestion = data.question;
+            currentCategory = data.category;
+
+            // Update front
+            questionText.innerHTML = `<span class="quote-mark">"</span>${escapeHtml(currentQuestion)}`;
+            categoryBadge.textContent = currentCategory;
+
+            // Update back hint
+            const hints = {
+                'Deep Talk': 'Jawab dengan hati terbuka. Ini momen buat saling ngerti lebih dalam 💙',
+                'Fun': 'Santai aja, ini buat ketawa-ketawa bareng 😄',
+                'Future & Dreams': 'Bayangin masa depan kalian berdua. Seru buat diomongin! 🌟',
+                'Relationship': 'Ini buat ngerefleksi dan ngerasa bersyukur sama hubungan kalian 💗',
+                'Childhood': 'Bernostalgia bareng, cerita masa kecil yang lucu-lucu 🧸',
+                "Life & Values": 'Obrolan yang bikin kalian makin kenal nilai hidup masing-masing 🌱',
+                'Adventure': 'Petualangan apa lagi yang pengen kalian lakuin bareng? 🚀',
+                'Romance': 'Momen manis buat ingetin kenapa kalian saling cinta 🌹',
+            };
+            hintText.textContent = hints[currentCategory] ||
+                'Gunakan pertanyaan ini sebagai pembuka obrolan santai. Jawab dengan jujur dan tulus ya ❤️';
+
+            // Update count
+            seenCount.textContent = `${data.total_seen} dilihat`;
+
+            showToast('✨ Pertanyaan baru!');
+        } catch (err) {
+            console.error(err);
+            showToast('⚠️ Gagal ambil pertanyaan, coba lagi');
+        } finally {
+            isLoading = false;
+            btnNext.classList.remove('loading');
+            btnNext.disabled = false;
+            cardInner.classList.remove('loading');
+        }
+    }
+
+    // ─── Reset ───
+    async function resetSession() {
+        try {
+            await fetch('/api/reset', { method: 'POST' });
+            currentQuestion = '';
+            currentCategory = '';
+            questionText.innerHTML = `<span class="quote-mark">"</span>Tekan tombol mulai untuk pertanyaan pertama ✨`;
+            categoryBadge.textContent = '—';
+            hintText.textContent = 'Gunakan pertanyaan ini sebagai pembuka obrolan santai. Jawab dengan jujur dan tulus ya ❤️';
+            cardInner.classList.remove('flipped');
+            seenCount.textContent = '0 dilihat';
+            showToast('🔄 Session direset!');
+            // Auto-fetch new question
+            setTimeout(fetchQuestion, 400);
+        } catch (err) {
+            showToast('⚠️ Gagal reset');
+        }
+    }
+
+    // ─── History ───
+    async function showHistory() {
+        try {
+            const resp = await fetch('/api/history');
+            const data = await resp.json();
+            historyList.innerHTML = '';
+            if (data.count === 0) {
+                historyList.innerHTML = '<div class="history-empty">Belum ada pertanyaan yang dilihat</div>';
+            } else {
+                data.history.forEach((q, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.textContent = `${i + 1}. ${q}`;
+                    historyList.appendChild(div);
+                });
+            }
+            historyOverlay.classList.add('open');
+        } catch (err) {
+            showToast('⚠️ Gagal ambil riwayat');
+        }
+    }
+
+    function closeHistory() {
+        historyOverlay.classList.remove('open');
+    }
+
+    // ─── Toast ───
+    let toastTimeout;
+
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // ─── Utils ───
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ─── Events ───
+    btnNext.addEventListener('click', fetchQuestion);
+    btnReset.addEventListener('click', resetSession);
+    btnHistory.addEventListener('click', showHistory);
+    historyClose.addEventListener('click', closeHistory);
+    historyOverlay.addEventListener('click', (e) => {
+        if (e.target === historyOverlay) closeHistory();
+    });
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'n') {
+            e.preventDefault();
+            fetchQuestion();
+        }
+        if (e.key === 'Escape') closeHistory();
+    });
+
+    // Auto-load first question
+    fetchQuestion();
+</script>
+</body>
+</html>
